@@ -1,3 +1,9 @@
+#include <iostream>
+#include <bitset>
+#include <climits>
+#include <string.h>
+#include <string>
+#include<ctime>
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -5,8 +11,8 @@
 using namespace tensorflow;
 
 REGISTER_OP("BitsQuant")
-    .Input("to_zero: float32")
-    .Output("zeroed: float32")
+    .Input("to_zero: float")
+    .Output("zeroed: float")
     .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
       c->set_output(0, c->input(0));
       return Status::OK();
@@ -66,13 +72,13 @@ class BitsQuantOp : public OpKernel {
   void Compute(OpKernelContext* context) override {
     // Grab the input tensor
     const Tensor& input_tensor = context->input(0);
-    auto input = input_tensor.flat<float32>();
+    auto input = input_tensor.flat<float>();
 
     // Create an output tensor
     Tensor* output_tensor = NULL;
     OP_REQUIRES_OK(context, context->allocate_output(0, input_tensor.shape(),
                                                      &output_tensor));
-    auto output_flat = output_tensor->flat<floats32>();
+    auto output_flat = output_tensor->flat<float>();
 
     // Set all but the first element of the output tensor to 0.
     const int N = input.size();
