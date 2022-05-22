@@ -1,0 +1,3 @@
+import tensorflow as tf
+bits_quant_module = tf.load_op_library('./bits_quant.so')
+print(bits_quant_module.bits_quant([[1.2, 2.3], [3.5, -4.1]]).numpy())
