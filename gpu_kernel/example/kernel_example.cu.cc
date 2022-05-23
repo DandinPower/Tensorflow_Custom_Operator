@@ -1,6 +1,6 @@
 #ifdef GOOGLE_CUDA
 #define EIGEN_USE_GPU
-#include "kernel_example.h"
+#include "example.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 
 using namespace tensorflow;
