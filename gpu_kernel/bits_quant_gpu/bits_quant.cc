@@ -1,5 +1,10 @@
 #include "bits_quant.h"
-
+#include <iostream>
+#include <bitset>
+#include <climits>
+#include <string.h>
+#include <string>
+#include<ctime>
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -9,7 +14,7 @@ using namespace tensorflow;
 using CPUDevice = Eigen::ThreadPoolDevice;
 using GPUDevice = Eigen::GpuDevice;
 
-REGISTER_OP("Example")
+REGISTER_OP("BitsQuant")
     .Attr("T: numbertype")
     .Input("input: T")
     .Output("input_times_two: T")
@@ -17,7 +22,7 @@ REGISTER_OP("Example")
       c->set_output(0, c->input(0));
       return Status::OK();
     });
-    
+
 union
 {
     float input; 
@@ -106,7 +111,7 @@ class BitsQuantOp : public OpKernel {
 #define REGISTER_CPU(T)                                          \
   REGISTER_KERNEL_BUILDER(                                       \
       Name("BitsQuant").Device(DEVICE_CPU).TypeConstraint<T>("T"), \
-      ExampleOp<CPUDevice, T>);
+      BitsQuantOp<CPUDevice, T>);
 REGISTER_CPU(float);
 REGISTER_CPU(int32);
 
@@ -117,7 +122,7 @@ REGISTER_CPU(int32);
   extern template class BitsQuantFunctor<GPUDevice, T>;            \
   REGISTER_KERNEL_BUILDER(                                       \
       Name("BitsQuant").Device(DEVICE_GPU).TypeConstraint<T>("T"), \
-      ExampleOp<GPUDevice, T>);
+      BitsQuantOp<GPUDevice, T>);
 REGISTER_GPU(float);
 REGISTER_GPU(int32);
 #endif  // GOOGLE_CUDA
