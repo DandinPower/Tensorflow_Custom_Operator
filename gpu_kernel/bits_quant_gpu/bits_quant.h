@@ -1,11 +1,6 @@
 #ifndef BITS_QUANT_H_
 #define BITS_QUANT_H_
-#include <iostream>
-#include <bitset>
-#include <climits>
-#include <string.h>
-#include <string>
-#include<ctime>
+
 #include <unsupported/Eigen/CXX11/Tensor>
 
 template <typename Device, typename T>
