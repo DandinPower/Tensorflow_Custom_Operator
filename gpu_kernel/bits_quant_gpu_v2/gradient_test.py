@@ -1,7 +1,14 @@
 import tensorflow as tf
 import numpy as np
 
-tf.no_gradient("BitsQuant")
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import sparse_ops
+
+@ops.RegisterGradient("BitsQuant")
+def _bits_quant_grad(op, grad):
+  inputs = op.inputs[0]
+  return [ops.NotDifferentiable] 
 
 class TestModel(tf.keras.Model):
     def __init__(self):
