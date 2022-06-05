@@ -27,15 +27,36 @@ class TestModel(tf.keras.Model):
         output = self.output1(x)
         return output
 
-inputs = tf.constant([1,2,3,4,5,6,7,8,9,10])
-y = tf.constant([0,1,0,0,0,0,0,0,0,0])
-model = TestModel()
-optimizer = tf.keras.optimizers.SGD(learning_rate=1e-3)
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer = keras.optimizers.SGD(learning_rate=1e-3)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+batch_size = 64
+(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+x_train = np.reshape(x_train, (-1, 784))
+x_test = np.reshape(x_test, (-1, 784))
+x_val = x_train[-10000:]
+y_val = y_train[-10000:]
+x_train = x_train[:-10000]
+y_train = y_train[:-10000]
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
+val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_dataset = val_dataset.batch(batch_size)
 
-with tf.GradientTape() as tape:
-    logits = model(inputs, training=True)
-    loss_value = loss_fn(y, logits)
-grads = tape.gradient(loss_value, model.trainable_weights)
-print(grads[0])
-optimizer.apply_gradients(zip(grads, model.trainable_weights))
+model = TestModel()
+
+epochs = 2
+for epoch in range(epochs):
+    print("\nStart of epoch %d" % (epoch,))
+    for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
+        with tf.GradientTape() as tape:
+            logits = model(x_batch_train, training=False)
+
+            loss_value = loss_fn(y_batch_train, logits)
+        grads = tape.gradient(loss_value, model.trainable_weights)
+        optimizer.apply_gradients(zip(grads, model.trainable_weights))
+        if step % 200 == 0:
+            print(
+                "Training loss (for one batch) at step %d: %.4f"
+                % (step, float(loss_value2))
+            )
+            print("Seen so far: %s samples" % ((step + 1) * batch_size))
