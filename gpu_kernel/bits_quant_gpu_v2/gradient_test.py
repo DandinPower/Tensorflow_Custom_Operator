@@ -25,10 +25,12 @@ class TestModel(tf.keras.Model):
     def call(self, inputs):
         x = self.flatten(inputs)
         x = self.dense1(x)
-        #x = self.kernel.bits_quant(x)
+        x = self.kernel.bits_quant(x)
         x = self.dense2(x)
-        output = self.output1(x)
-        return output
+        x = self.kernel.bits_quant(x)
+        x = self.output1(x)
+        x = self.kernel.bits_quant(x)
+        return x
 
 optimizer = keras.optimizers.SGD(learning_rate=1e-3)
 loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
