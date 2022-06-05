@@ -18,6 +18,7 @@ class TestModel(tf.keras.Model):
         output = self.output1(x)
         return output
 
+'''
 inputs = tf.constant([1,2,3,4,5,6,7,8,9,10])
 y = tf.constant([0,1,0,0,0,0,0,0,0,0])
 model = TestModel()
@@ -29,4 +30,4 @@ with tf.GradientTape() as tape:
     loss_value = loss_fn(y, logits)
 grads = tape.gradient(loss_value, model.trainable_weights)
 print(grads[0])
-optimizer.apply_gradients(zip(grads, model.trainable_weights))
+optimizer.apply_gradients(zip(grads, model.trainable_weights))'''
