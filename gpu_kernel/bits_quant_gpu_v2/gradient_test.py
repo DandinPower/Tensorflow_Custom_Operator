@@ -1,5 +1,8 @@
 import tensorflow as tf
 import numpy as np
+from tensorflow import keras
+from tensorflow.keras import layers
+import numpy as np
 
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import array_ops
