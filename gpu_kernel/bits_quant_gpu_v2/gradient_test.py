@@ -8,7 +8,7 @@ from tensorflow.python.ops import sparse_ops
 @ops.RegisterGradient("BitsQuant")
 def _bits_quant_grad(op, grad):
   inputs = op.inputs[0]
-  return [ops.NotDifferentiable] 
+  return [grad] 
 
 class TestModel(tf.keras.Model):
     def __init__(self):
