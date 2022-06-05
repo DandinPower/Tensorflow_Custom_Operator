@@ -1,6 +1,8 @@
 import tensorflow as tf
 import numpy as np
 
+tf.no_gradient("BitsQuant")
+
 class TestModel(tf.keras.Model):
     def __init__(self):
         super().__init__()
