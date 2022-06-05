@@ -60,6 +60,6 @@ for epoch in range(epochs):
         if step % 200 == 0:
             print(
                 "Training loss (for one batch) at step %d: %.4f"
-                % (step, float(loss_value2))
+                % (step, float(loss_value))
             )
             print("Seen so far: %s samples" % ((step + 1) * batch_size))
