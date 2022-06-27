@@ -10,8 +10,10 @@
 #include <vector>
 
 using namespace tensorflow;
-
 #define FLOAT_BITS_LENGTH 32
+int shift_normal,detect_normal,remove_normal,inject_normal = 0,0,0,0;
+int shift_approximate,detect_approximate,remove_approximate,inject_approximate = 0,0,0,0;
+
 std::string float_to_bin(float x){
     char bitsString[FLOAT_BITS_LENGTH];
     int fl = *(int*)&x;
@@ -33,23 +35,36 @@ int Max(int x, int y){
     else return y;
 }
 
-std::vector<int> PermutationWrite(float x, float y){
+void PermutationWrite(float x, float y){
     std::string binary_x = float_to_bin(x);
     std::string binary_y = float_to_bin(y);
-    std::cout << binary_x << std::endl;
-    std::cout << binary_y << std::endl;
     int Q_x = CountQ(binary_x);
     int Q_y = CountQ(binary_y);
-    int shift = 2 * (FLOAT_BITS_LENGTH + 1) + Max((Q_x - Q_y), 0);
-    int detect = FLOAT_BITS_LENGTH;
-    int remove = Max((Q_x - Q_y), 0);
-    int inject = Max((Q_y - Q_x), 0);
-    std::vector<int> answer;
-    answer.push_back(shift);
-    answer.push_back(detect);
-    answer.push_back(remove);
-    answer.push_back(inject);
-    return answer;
+    shift_normal += 2 * (FLOAT_BITS_LENGTH + 1) + Max((Q_x - Q_y), 0);
+    detect_normal += FLOAT_BITS_LENGTH;
+    remove_normal += Max((Q_x - Q_y), 0);
+    inject_normal += Max((Q_y - Q_x), 0);
+    shift_approximate += 2 * (FLOAT_BITS_LENGTH + 1);
+    detect_approximate += FLOAT_BITS_LENGTH;
+}
+
+//當前面的tensor比後面大的時候(代表需要刪除)
+void RemoveOld(float x){
+    std::string binary_x = float_to_bin(x);
+    int Q_x = CountQ(binary_x);
+    shift_normal += 2 * (FLOAT_BITS_LENGTH);
+    remove_normal += Q_x;
+}
+
+//當後面的tensor比前面大的時候(代表需要重新寫入)
+void WriteNew(float y){
+    std::string binary_y = float_to_bin(y);
+    int Q_y = CountQ(binary_y);
+    shift_normal += 2 * (FLOAT_BITS_LENGTH);
+    inject_normal += Q_y;
+    shift_approximate += 2 * (FLOAT_BITS_LENGTH + 1);
+    detect_approximate += FLOAT_BITS_LENGTH;
+
 }
 
 REGISTER_OP("CountSkrm")
@@ -71,8 +86,16 @@ class CountSkrmOp : public OpKernel {
     const Tensor& input_tensor2 = context->input(1);
     auto input = input_tensor.flat<float>();
     auto input2 = input_tensor2.flat<float>();
-    std::vector answer = PermutationWrite(input(0),input2(1));
-    std::cout << answer[0] << ' ' << answer[1] << ' ' << answer[2] << ' ' << answer[3] << std::endl;
+    int N1 = input.size();
+    int N2 = input2.size();
+    int MaxN = Max(N1, N2);
+    for (int i = 0; i< MaxN; i++){
+      if ((N1-1) < i) WriteNew(input2(i));
+      else if((N2 -1) < i) RemoveOld(input(i));
+      else PermutationWrite(input(i),input2(i));
+    }
+    std::cout << shift_normal << ' ' << detect_normal << ' ' << remove_normal << ' ' << inject_normal << std::endl;
+    std::cout << shift_approximate << ' ' << detect_approximate << ' ' << remove_approximate << ' ' << inject_approximate << std::endl;
 
     // Create an output tensor
     Tensor* output_tensor = NULL;
