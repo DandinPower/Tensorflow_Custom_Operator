@@ -81,7 +81,12 @@ void WriteNew(float y){
 REGISTER_OP("CountSkrm")
     .Input("to_zero: float")
     .Input("to_zero2: float")
-    .Output("zeroed: float");
+    .Input("shape: int64")
+    .Output("zeroed: int64")
+    .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
+      c->set_output(0, c->input(2));
+      return Status::OK();
+    });
 
 class CountSkrmOp : public OpKernel {
  public:
@@ -92,6 +97,7 @@ class CountSkrmOp : public OpKernel {
     init();
     const Tensor& input_tensor = context->input(0);
     const Tensor& input_tensor2 = context->input(1);
+    const Tensor& input_shape = context->input(2);
     auto input = input_tensor.flat<float>();
     auto input2 = input_tensor2.flat<float>();
     int N1 = input.size();
@@ -102,18 +108,22 @@ class CountSkrmOp : public OpKernel {
       else if((N2 -1) < i) RemoveOld(input(i));
       else PermutationWrite(input(i),input2(i));
     }
-    std::cout << shift_normal << ' ' << detect_normal << ' ' << remove_normal << ' ' << inject_normal << std::endl;
-    std::cout << shift_approximate << ' ' << detect_approximate << ' ' << remove_approximate << ' ' << inject_approximate << std::endl;
+    //std::cout << shift_normal << ' ' << detect_normal << ' ' << remove_normal << ' ' << inject_normal << std::endl;
+    //std::cout << shift_approximate << ' ' << detect_approximate << ' ' << remove_approximate << ' ' << inject_approximate << std::endl;
 
     // Create an output tensor
     Tensor* output_tensor = NULL;
-    OP_REQUIRES_OK(context, context->allocate_output(0, [8],
+    OP_REQUIRES_OK(context, context->allocate_output(0, input_shape.shape(),
                                                      &output_tensor));
-    auto output_flat = output_tensor->flat<float>();
-    // Set all but the first element of the output tensor to 0.
-    for (int i = 0; i < 8; i++) {
-      output_flat(i) = 0.0;
-    }
+    auto output_flat = output_tensor->flat<int64>();
+    output_flat(0) = shift_normal;
+    output_flat(1) = detect_normal;
+    output_flat(2) = remove_normal;
+    output_flat(3) = inject_normal;
+    output_flat(4) = shift_approximate;
+    output_flat(5) = detect_approximate;
+    output_flat(6) = remove_approximate;
+    output_flat(7) = inject_approximate;
   }
 };
 
