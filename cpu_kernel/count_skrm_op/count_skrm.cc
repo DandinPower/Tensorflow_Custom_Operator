@@ -11,8 +11,19 @@
 
 using namespace tensorflow;
 #define FLOAT_BITS_LENGTH 32
-int shift_normal,detect_normal,remove_normal,inject_normal = 0,0,0,0;
-int shift_approximate,detect_approximate,remove_approximate,inject_approximate = 0,0,0,0;
+int shift_normal,detect_normal,remove_normal,inject_normal;
+int shift_approximate,detect_approximate,remove_approximate,inject_approximate;
+
+void init(){
+  shift_normal = 0;
+  shift_approximate = 0;
+  detect_normal = 0;
+  detect_approximate = 0;
+  remove_normal = 0;
+  remove_approximate = 0;
+  inject_normal = 0;
+  inject_approximate = 0;
+}
 
 std::string float_to_bin(float x){
     char bitsString[FLOAT_BITS_LENGTH];
@@ -82,6 +93,7 @@ class CountSkrmOp : public OpKernel {
 
   void Compute(OpKernelContext* context) override {
     // Grab the input tensor
+    init();
     const Tensor& input_tensor = context->input(0);
     const Tensor& input_tensor2 = context->input(1);
     auto input = input_tensor.flat<float>();
