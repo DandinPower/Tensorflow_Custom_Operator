@@ -61,18 +61,23 @@ void PermutationWrite(float x, float y){
 
 //當前面的tensor比後面大的時候(代表需要刪除)
 void RemoveOld(float x){
+    /*
     std::string binary_x = float_to_bin(x);
     int Q_x = CountQ(binary_x);
     shift_normal += 2 * (FLOAT_BITS_LENGTH);
     remove_normal += Q_x;
+    */
 }
 
 //當後面的tensor比前面大的時候(代表需要重新寫入)
 void WriteNew(float y){
     std::string binary_y = float_to_bin(y);
+    int Q_x = FLOAT_BITS_LENGTH/2;
     int Q_y = CountQ(binary_y);
-    shift_normal += 2 * (FLOAT_BITS_LENGTH);
-    inject_normal += Q_y;
+    shift_normal += 2 * (FLOAT_BITS_LENGTH + 1) + Max((Q_x - Q_y), 0);
+    detect_normal += FLOAT_BITS_LENGTH;
+    remove_normal += Max((Q_x - Q_y), 0);
+    inject_normal += Max((Q_y - Q_x), 0);
     shift_approximate += 2 * (FLOAT_BITS_LENGTH + 1);
     detect_approximate += FLOAT_BITS_LENGTH;
 
