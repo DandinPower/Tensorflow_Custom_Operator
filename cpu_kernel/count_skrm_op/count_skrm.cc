@@ -14,6 +14,7 @@ using namespace tensorflow;
 int shift_normal,detect_normal,remove_normal,inject_normal;
 int shift_approximate,detect_approximate,remove_approximate,inject_approximate;
 
+//初始化紀錄
 void init(){
   shift_normal = 0;
   shift_approximate = 0;
@@ -25,6 +26,7 @@ void init(){
   inject_approximate = 0;
 }
 
+//將浮點數->001010010101....
 std::string float_to_bin(float x){
     char bitsString[FLOAT_BITS_LENGTH];
     int fl = *(int*)&x;
@@ -33,6 +35,7 @@ std::string float_to_bin(float x){
     return bitsString;
 }
 
+//計算010010101... 裡有幾個1
 int CountQ(std::string x){
     int total = 0;
     for (int i=0; i<FLOAT_BITS_LENGTH; i++){
@@ -41,6 +44,7 @@ int CountQ(std::string x){
     return total;
 }
 
+//取最大值
 int Max(int x, int y){
     if (x >= y) return x;
     else return y;
@@ -113,9 +117,6 @@ class CountSkrmOp : public OpKernel {
       else if((N2 -1) < i) RemoveOld(input(i));
       else PermutationWrite(input(i),input2(i));
     }
-    //std::cout << shift_normal << ' ' << detect_normal << ' ' << remove_normal << ' ' << inject_normal << std::endl;
-    //std::cout << shift_approximate << ' ' << detect_approximate << ' ' << remove_approximate << ' ' << inject_approximate << std::endl;
-
     // Create an output tensor
     Tensor* output_tensor = NULL;
     OP_REQUIRES_OK(context, context->allocate_output(0, input_shape.shape(),
