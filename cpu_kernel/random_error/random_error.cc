@@ -59,27 +59,27 @@ class RandomErrorOp : public OpKernel {
   }
 
   void Compute(OpKernelContext* context) override {
-    std::cout << "range" << start << " " << end << std::endl;
+    std::cout << "range " << start << " " << end << std::endl;
     const Tensor& input_tensor = context->input(0);
     auto input = input_tensor.flat<float>();
     int N = input.size();
     int total_error_bits_nums = N * FLOAT_BITS_LENGTH * error_rate;
-    std::cout << "total_error_bits_nums" << total_error_bits_nums << std::endl;
+    std::cout << "total_error_bits_nums " << total_error_bits_nums << std::endl;
     Tensor* output_tensor = NULL;
     OP_REQUIRES_OK(context, context->allocate_output(0, input_tensor.shape(),
                                                      &output_tensor));
-    auto output_flat = output_tensor->flat<int64>();
+    auto output_flat = output_tensor->flat<float>();
     long bits_rate_start = GetFlipRate(start);
     long bits_rate_end = GetFlipRate(end);
-    std::cout << "bits_rate_range" << bits_rate_start << " " << bits_rate_end << std::endl;
+    std::cout << "bits_rate_range " << bits_rate_start << " " << bits_rate_end << std::endl;
     for (int i=0; i<N; i++){
       float origin = input(i);
       if (total_error_bits_nums > 0){
         long random_flip_rate = GetRateByRange(bits_rate_start, bits_rate_end);
-        std::cout << "random" << random_flip_rate << std::endl;
+        std::cout << "random " << random_flip_rate << std::endl;
         total_error_bits_nums -= FlipBits(&origin, random_flip_rate);
       }
-      std::cout << "total_error_bits_nums after flip" << total_error_bits_nums << std::endl;
+      std::cout << "total_error_bits_nums after flip " << total_error_bits_nums << std::endl;
       output_flat(i) = origin;
     }
   }
