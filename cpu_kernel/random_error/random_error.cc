@@ -2,6 +2,7 @@
 #include "tensorflow/core/framework/shape_inference.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include <iostream>
+#include <random>
 #include <climits>
 #include <string.h>
 #include <string>
@@ -12,55 +13,38 @@
 using namespace tensorflow;
 #define FLOAT_BITS_LENGTH 32
 
-int error_bits_nums = 0;
+random_device rd;
+default_random_engine eng(rd());
 
-//將浮點數->001010010101....
-std::string float_to_bin(float x){
-    char bitsString[FLOAT_BITS_LENGTH];
-    int fl = *(int*)&x;
-    for (int i = 0; i < sizeof(float) * 8; ++i)
-    bitsString[FLOAT_BITS_LENGTH -1 -i] = ((1 << i) & fl) != 0 ? '1' : '0';
-    return bitsString;
+
+//根據要翻轉的bits數取得rate
+long GetFlipRate(int num){
+    long result = 0;
+    for (int i=0; i<num; i++) result += pow(2, i);
+    return result;
 }
 
-//將001010010101.. -> float
-float StringToFloat(std::string bitsString){
-    int sign = (bitsString[0]=='1')?-1:1;    
-    int exp = -127;
-    float bb = 1;
-    for(int i=8;i>0;i--){
-        if(bitsString[i]=='1') exp+=bb;
-        bb *= 2;
-    }
-    bb = 1;
-    float ff=1;
-    for(int i=9;i<32;i++){
-        bb/=2;
-        if(bitsString[i]=='1') ff+=bb;
-    }
-    ff = ff * pow(2,exp) * sign;
-    return ff;
+//根據給定的rate來翻轉bits
+int FlipBits(float* x, long rate){
+    int flip_nums = 0;
+    int* address = (int *)x; 
+    *address ^= rate;
+    for (int i = 0; i < FLOAT_BITS_LENGTH; ++i) flip_nums += ((1 << i) & rate) != 0 ? 1 : 0;
+    return flip_nums;
 }
 
-//計算010010101... 裡有幾個1
-int CountQ(std::string x){
-    int total = 0;
-    for (int i=0; i<FLOAT_BITS_LENGTH; i++){
-        if (x[i] == '1') total++;
-    }
-    return total;
-}
-
-//取最大值
-int Max(int x, int y){
-    if (x >= y) return x;
-    else return y;
+//根據範圍取得rate
+long GetRateByRange(long start, long end){
+    uniform_int_distribution<long> distr(start, end);
+    return distr(eng);
 }
 
 REGISTER_OP("RandomError")
     .Input("origin_tensor: float")
     .Output("error_tensor: float")
-    .Attr("error_type: int = 0")
+    .Attr("error_rate: float = 0.25")
+    .Attr("start: int = 0")
+    .Attr("end: int = 32")
     .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
       c->set_output(0, c->input(1));
       return Status::OK();
@@ -68,26 +52,42 @@ REGISTER_OP("RandomError")
 
 class RandomErrorOp : public OpKernel {
  public:
-  explicit RandomErrorOp(OpKernelConstruction* context) : OpKernel(context) {}
+  explicit RandomErrorOp(OpKernelConstruction* context) : OpKernel(context) {
+    OP_REQUIRES_OK(context, context->GetAttr("error_rate", &error_rate));
+    OP_REQUIRES_OK(context, context->GetAttr("start", &start));
+    OP_REQUIRES_OK(context, context->GetAttr("end", &end));
+  }
 
   void Compute(OpKernelContext* context) override {
     init();
+    std::cout << "range" << start << " " << end << std::endl;
     const Tensor& input_tensor = context->input(0);
     auto input = input_tensor.flat<float>();
     int N = input.size();
-    int total_bits_nums = N * FLOAT_BITS_LENGTH;
+    int total_error_bits_nums = N * FLOAT_BITS_LENGTH * error_rate;
+    std::cout << "total_error_bits_nums" << total_error_bits_nums << std::endl;
     Tensor* output_tensor = NULL;
     OP_REQUIRES_OK(context, context->allocate_output(0, input_tensor.shape(),
                                                      &output_tensor));
     auto output_flat = output_tensor->flat<int64>();
+    long bits_rate_start = GetFlipRate(start);
+    long bits_rate_end = GetFlipRate(end);
+    std::cout << "bits_rate_range" << bits_rate_start << " " << bits_rate_end << std::endl;
     for (int i=0; i<N; i++){
-      std::string bits = float_to_bin(input(i));
-      
-      
-      
-      output_flat(i) = NULL;
+      float origin = input(i);
+      if (total_error_bits_nums > 0){
+        long random_flip_rate = GetRateByRange(bits_rate_start, bits_rate_end);
+        std::cout << "random" << random_flip_rate << std::endl;
+        total_error_bits_nums -= FlipBits(&origin, random_flip_rate);
+      }
+      std::cout << "total_error_bits_nums after flip" << total_error_bits_nums << std::endl;
+      output_flat(i) = origin;
     }
   }
+  private:
+    int start;
+    int end;
+    float error_rate;
 };
 
 REGISTER_KERNEL_BUILDER(Name("RandomError").Device(DEVICE_CPU), RandomErrorOp);
