@@ -13,8 +13,8 @@
 using namespace tensorflow;
 #define FLOAT_BITS_LENGTH 32
 
-random_device rd;
-default_random_engine eng(rd());
+std::random_device rd;
+std::default_random_engine eng(rd());
 
 
 //根據要翻轉的bits數取得rate
@@ -35,7 +35,7 @@ int FlipBits(float* x, long rate){
 
 //根據範圍取得rate
 long GetRateByRange(long start, long end){
-    uniform_int_distribution<long> distr(start, end);
+    std::uniform_int_distribution<long> distr(start, end);
     return distr(eng);
 }
 
@@ -59,7 +59,6 @@ class RandomErrorOp : public OpKernel {
   }
 
   void Compute(OpKernelContext* context) override {
-    init();
     std::cout << "range" << start << " " << end << std::endl;
     const Tensor& input_tensor = context->input(0);
     auto input = input_tensor.flat<float>();
