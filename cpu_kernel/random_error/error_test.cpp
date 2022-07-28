@@ -40,10 +40,17 @@ long GetRateByRange(long start, long end){
 
 int main(){
     float x = 1.2321;
+    long start = GetFlipRate(25);
+    long end = GetFlipRate(32);
+    long rate = GetRateByRange(start,end);
+    cout << rate << endl;
+    cout << FlipBits(&x, rate) << endl;
+    cout << x << endl;
+    /*
     for (int i=0; i< 32; i++) history[i] = 0;
     for (int i=0; i< 10000000; i++){
         long rate = GetRateByRange(zero, mantissa);
         history[FlipBits(&x, rate)-1] += 1;
     }
-    for (int i=0; i< 32; i++) cout << history[i] << endl;
+    for (int i=0; i< 32; i++) cout << history[i] << endl;*/
 }

@@ -9,5 +9,5 @@ print(b)
 b = kernal_module.random_error(a, 0.25, 0, 23)
 print(b)
 
-b = kernal_module.random_error(a, 0.01, 10, 23)
+b = kernal_module.random_error(a, 0.01, 25, 32)
 print(b)
